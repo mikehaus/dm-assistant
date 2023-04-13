@@ -7,4 +7,3 @@ export const completionsRouter = createTRPCRouter({
     return ctx.prisma.completion.findMany();
   })
 })
-
