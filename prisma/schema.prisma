@@ -28,3 +28,8 @@ model Completion {
 
   @@index([authorId])
 }
+
+model FeatureFlag {
+  id   String @id @default(cuid())
+  slug String
+}
