@@ -9,6 +9,7 @@ const Home: NextPage = () => {
   const hello = api.example.hello.useQuery({ text: "from tRPC" });
 
   const user = useUser();
+  console.log(user?.user.id);
 
   return (
     <>

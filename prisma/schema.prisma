@@ -6,13 +6,25 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
-model Example {
-    id        String   @id @default(cuid())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model User {
+  id          String       @id @default(cuid())
+  clerkId     String       @db.VarChar(255)
+  username    String       @db.VarChar(255)
+  firstName   String       @db.VarChar(255)
+  completions Completion[]
+}
+
+model Completion {
+  id       String @id @default(cuid())
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId String
+  prompt   String
+  answer   String
+
+  @@index([authorId])
 }

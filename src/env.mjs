@@ -7,7 +7,7 @@ import { z } from "zod";
 const server = z.object({
   DATABASE_URL: z.string().url(),
   NODE_ENV: z.enum(["development", "test", "production"]),
-  OPEN_AI_SECRET_KEY: z.enum(["development", "test", "production"]),
+  OPEN_AI_SECRET_KEY: z.string(), 
 });
 
 /**
