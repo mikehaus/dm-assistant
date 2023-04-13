@@ -6,9 +6,9 @@ import Link from "next/link";
 import { api } from "~/utils/api";
 
 const Home: NextPage = () => {
-  const hello = api.example.hello.useQuery({ text: "from tRPC" });
-
   const user = useUser();
+
+  const { data } = api.completions.getAll.useQuery();
 
   return (
     <>
@@ -37,9 +37,11 @@ const Home: NextPage = () => {
               <div className="text-lg">Generate an adventure or quest.</div>
             </Link>
           </div>
-          <p className="text-2xl text-white">
-            {hello.data ? hello.data.greeting : "Loading tRPC query..."}
-          </p>
+          <div>
+            {data?.map((completion) => (
+              <div key={completion.id}>{completion.prompt}</div>
+            ))}
+          </div>
         </div>
       </main>
     </>
