@@ -1,7 +1,6 @@
 import {
   SignIn,
   SignInButton,
-  SignOutButton,
   UserButton,
   useUser,
 } from "@clerk/nextjs";
@@ -10,6 +9,12 @@ import Head from "next/head";
 import Link from "next/link";
 
 import { api } from "~/utils/api";
+
+const DEFAULT_COMPLETIONS_MODEL: string = 'text-davinci-003';
+const DEFAULT_COMPLETIONS_PROMPT: string = 'Give me a name for a dungeons and dragons monk player character';
+const DEFAULT_COMPLETIONS_N: number = 1;
+const DEFAULT_COMPLETIONS_MAX_TOKENS: number = 10;
+const DEFAULT_COMPLETIONS_TEMPERATURE: number = 0.7;
 
 const Home: NextPage = () => {
   const user = useUser();
@@ -45,7 +50,6 @@ const Home: NextPage = () => {
               </div>
             )}
             {!!user.isSignedIn && (
-              // <div className="flex justify-center bg-teal-700 text-slate-100 p-4 rounded-xl">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
                 <Link
                   className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
