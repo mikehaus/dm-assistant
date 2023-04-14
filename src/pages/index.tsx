@@ -35,8 +35,6 @@ const CompletionCard = ({ result }: CompletionCardProps) => {
 const Home: NextPage = () => {
   const user = useUser();
 
-  const { data, isLoading } = api.completions.getAll.useQuery();
-
   const [answer, setAnswer] = useState("");
 
   // TODO: Find way to handle data to prevent error on div
@@ -52,15 +50,12 @@ const Home: NextPage = () => {
     setAnswer(choices[0]?.text);
   };
 
-  // TODO: Make sure this is firing properly
-  if (isLoading)
+  if (!user.isLoaded) 
     return (
       <div className="flex justify-center">
         <PyramidLoader />
       </div>
     );
-
-  if (!isLoading && !data) return <div>Something went wrong!</div>;
 
   // TODO: refactor some of the things to use tailwind instead of raw css for practice
   return (
@@ -110,11 +105,6 @@ const Home: NextPage = () => {
               </>
             )}
             <SignIn path="/sign-in" routing="path" signUpUrl="/sign-up" />
-          </div>
-          <div>
-            {data?.map((completion) => (
-              <div key={completion.id}>{completion.prompt}</div>
-            ))}
           </div>
         </div>
       </main>
