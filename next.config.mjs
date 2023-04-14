@@ -18,5 +18,9 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
+  env: {
+    OPEN_AI_SECRET_KEY: process.env.OPEN_AI_SECRET_KEY,
+  },
 };
+
 export default config;

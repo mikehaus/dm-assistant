@@ -1,28 +1,68 @@
-import {
-  SignIn,
-  SignInButton,
-  UserButton,
-  useUser,
-} from "@clerk/nextjs";
+import { SignIn, SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { type NextPage } from "next";
 import Head from "next/head";
-import Link from "next/link";
+import { useState } from "react";
+import PropTypes, { InferProps } from "prop-types";
 
 import { api } from "~/utils/api";
+import { handleOpenAiCompletion } from "./api/openAi";
 
-const DEFAULT_COMPLETIONS_MODEL: string = 'text-davinci-003';
-const DEFAULT_COMPLETIONS_PROMPT: string = 'Give me a name for a dungeons and dragons monk player character';
-const DEFAULT_COMPLETIONS_N: number = 1;
-const DEFAULT_COMPLETIONS_MAX_TOKENS: number = 10;
-const DEFAULT_COMPLETIONS_TEMPERATURE: number = 0.7;
+const DEFAULT_COMPLETIONS_MODEL = "text-davinci-003";
+const DEFAULT_COMPLETIONS_PROMPT =
+  "Give me a name for a dungeons and dragons monk player character";
+
+type CompletionCardProps = {
+  result: string;
+};
+
+const PyramidLoader = () => {
+  return (
+    <div className="pyramid-loader">
+      <div className="pyramid-loader-wrapper">
+        <span className="pyramid-loader-side pyramid-loader-side1" />
+        <span className="pyramid-loader-side pyramid-loader-side2" />
+        <span className="pyramid-loader-side pyramid-loader-side3" />
+        <span className="pyramid-loader-side pyramid-loader-side4" />
+      </div>
+    </div>
+  );
+};
+
+const CompletionCard = ({ result }: CompletionCardProps) => {
+  return <div className="card">{result}</div>;
+};
 
 const Home: NextPage = () => {
   const user = useUser();
 
-  const { data } = api.completions.getAll.useQuery();
+  const { data, isLoading } = api.completions.getAll.useQuery();
 
-  if (!data) return <div>Loading...</div>;
+  const [answer, setAnswer] = useState("");
 
+  // TODO: Find way to handle data to prevent error on div
+  const generateAdventure = async () => {
+    // TODO: Handle the response better to prevent runtime error
+    const adventureData = await handleOpenAiCompletion(
+      DEFAULT_COMPLETIONS_PROMPT,
+      DEFAULT_COMPLETIONS_MODEL
+    );
+
+    const { choices } = adventureData;
+
+    setAnswer(choices[0]?.text);
+  };
+
+  // TODO: Make sure this is firing properly
+  if (isLoading)
+    return (
+      <div className="flex justify-center">
+        <PyramidLoader />
+      </div>
+    );
+
+  if (!isLoading && !data) return <div>Something went wrong!</div>;
+
+  // TODO: refactor some of the things to use tailwind instead of raw css for practice
   return (
     <>
       <Head>
@@ -50,16 +90,24 @@ const Home: NextPage = () => {
               </div>
             )}
             {!!user.isSignedIn && (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-                <Link
-                  className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-                  href="http://google.com"
-                  target="_blank"
-                >
-                  <h3 className="text-2xl font-bold">Adventure Generator</h3>
-                  <div className="text-lg">Generate an adventure or quest.</div>
-                </Link>
-              </div>
+              <>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
+                  <div
+                    className="flex max-w-xs cursor-pointer flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
+                    onClick={generateAdventure}
+                  >
+                    <h3 className="text-2xl font-bold">Adventure Generator</h3>
+                    <div className="text-lg">
+                      Generate an adventure or quest.
+                    </div>
+                  </div>
+                </div>
+                {answer !== "" && (
+                  <div className="answer-card my-4 h-20 w-full rounded-xl p-4">
+                    {answer}
+                  </div>
+                )}
+              </>
             )}
             <SignIn path="/sign-in" routing="path" signUpUrl="/sign-up" />
           </div>
