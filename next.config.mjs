@@ -19,7 +19,7 @@ const config = {
     defaultLocale: "en",
   },
   env: {
-    OPEN_AI_SECRET_KEY: process.env.OPEN_AI_SECRET_KEY,
+    OPEN_AI_SECRET_KEY: process.env.OPEN_AI_SECRET_KEY || "",
   },
 };
 
