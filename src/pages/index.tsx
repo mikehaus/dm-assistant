@@ -9,7 +9,7 @@ import { handleOpenAiCompletion } from "./api/openAi";
 
 const DEFAULT_COMPLETIONS_MODEL = "text-davinci-003";
 const DEFAULT_COMPLETIONS_PROMPT =
-  "Give me a name for a dungeons and dragons monk player character";
+  "Provide and idea for a Dungeons and Dragons quest";
 
 type CompletionCardProps = {
   result: string;
@@ -36,26 +36,31 @@ const Home: NextPage = () => {
   const user = useUser();
 
   const [answer, setAnswer] = useState("");
+  const [questInputValue, setQuestInputValue] = useState("");
 
   // TODO: Find way to handle data to prevent error on div
   const generateAdventure = async () => {
     // TODO: Handle the response better to prevent runtime error
     const adventureData = await handleOpenAiCompletion(
       DEFAULT_COMPLETIONS_PROMPT,
-      DEFAULT_COMPLETIONS_MODEL
+      DEFAULT_COMPLETIONS_MODEL,
     );
 
     const { choices } = adventureData;
 
-    setAnswer(choices[0]?.text);
+    setAnswer(
+      choices[0]?.text ||
+        "Sorry! There was an error generating a quest idea. Please try again.",
+    );
   };
 
-  if (!user.isLoaded) 
+  if (!user.isLoaded) {
     return (
       <div className="flex justify-center">
         <PyramidLoader />
       </div>
     );
+  }
 
   // TODO: refactor some of the things to use tailwind instead of raw css for practice
   return (
@@ -97,9 +102,19 @@ const Home: NextPage = () => {
                     </div>
                   </div>
                 </div>
+                <input
+                  type="text"
+                  className="flex justify-center w-1/2 h-14 text-sky-200 bg-sky-900 p-3 my-4 rounded-full"
+                  placeholder="test"
+                  value={questInputValue}
+                  onChange={(e) => setQuestInputValue(e.target.value)}
+                />
                 {answer !== "" && (
-                  <div className="answer-card my-4 h-20 w-full rounded-xl p-4">
-                    {answer}
+                  <div className="answer-card my-4 h-fit w-1/2 rounded-xl p-4">
+                    <h3 className="text-lg text-sky-300 font-bold">
+                      Your generated adventure:
+                    </h3>
+                    <div className="text-sm text-sky-400 mt-2">{answer}</div>
                   </div>
                 )}
               </>

@@ -35,9 +35,10 @@ const openai = new OpenAIApi(configuration);
 // TODO: Handle error sad path, handle typings
 export async function handleOpenAiCompletion(
   prompt: string,
-  model = "text-davinci-003"
+  model = "text-davinci-003",
+
 ) {
-  const { data } = await openai.createCompletion({ model, prompt });
+  const { data } = await openai.createCompletion({ model, prompt, max_tokens: 100 });
 
   return data;
 }
