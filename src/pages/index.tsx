@@ -2,18 +2,12 @@ import { SignIn, SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { type NextPage } from "next";
 import Head from "next/head";
 import { useState } from "react";
-import PropTypes, { InferProps } from "prop-types";
 
-import { api } from "~/utils/api";
 import { handleOpenAiCompletion } from "./api/openAi";
 
 const DEFAULT_COMPLETIONS_MODEL = "text-davinci-003";
 const DEFAULT_COMPLETIONS_PROMPT =
   "Provide and idea for a Dungeons and Dragons quest";
-
-type CompletionCardProps = {
-  result: string;
-};
 
 const PyramidLoader = () => {
   return (
@@ -26,10 +20,6 @@ const PyramidLoader = () => {
       </div>
     </div>
   );
-};
-
-const CompletionCard = ({ result }: CompletionCardProps) => {
-  return <div className="card">{result}</div>;
 };
 
 const Home: NextPage = () => {
