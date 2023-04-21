@@ -1,9 +1,10 @@
 import { SignIn, SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { type NextPage } from "next";
 import Head from "next/head";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { handleOpenAiCompletion } from "./api/openAi";
+import { getOpenAiCompletion } from "./api/openAi";
 
 const DEFAULT_COMPLETIONS_MODEL = "text-davinci-003";
 const DEFAULT_COMPLETIONS_PROMPT =
@@ -28,20 +29,18 @@ const Home: NextPage = () => {
   const [answer, setAnswer] = useState("");
   const [questInputValue, setQuestInputValue] = useState("");
 
-  // TODO: Find way to handle data to prevent error on div
-  const generateAdventure = async () => {
-    // TODO: Handle the response better to prevent runtime error
-    const adventureData = await handleOpenAiCompletion(
+  // TODO: Add debounced input value to prevent requery
+  const { isLoading, data, error } = useQuery(
+    ["completion"],
+    () => getOpenAiCompletion(
       DEFAULT_COMPLETIONS_PROMPT,
       DEFAULT_COMPLETIONS_MODEL,
-    );
+    ),
+  );
 
-    const { choices } = adventureData;
-
-    setAnswer(
-      choices[0]?.text ||
-        "Sorry! There was an error generating a quest idea. Please try again.",
-    );
+  // TODO: Find way to handle data to prevent error on div
+  const generateAdventure = () => {
+    console.log(data);
   };
 
   if (!user.isLoaded) {
@@ -51,6 +50,16 @@ const Home: NextPage = () => {
       </div>
     );
   }
+
+  const LoadingSplash = () => (
+    <div className="text-lg text-blue-500">Loading...</div>
+  );
+
+  const ErrorSplash = () => (
+    <div className="text-lg text-red-500">
+      Sorry! There was an error generating a quest idea. Please try again.
+    </div>
+  );
 
   // TODO: refactor some of the things to use tailwind instead of raw css for practice
   return (
@@ -99,13 +108,15 @@ const Home: NextPage = () => {
                   value={questInputValue}
                   onChange={(e) => setQuestInputValue(e.target.value)}
                 />
-                {answer !== "" && (
+                {!!isLoading && <LoadingSplash />}
+                {!!error && <ErrorSplash />}
+                {!!answer.length && !isLoading && !error(
                   <div className="answer-card my-4 h-fit w-1/2 rounded-xl p-4">
                     <h3 className="text-lg text-sky-300 font-bold">
                       Your generated adventure:
                     </h3>
                     <div className="text-sm text-sky-400 mt-2">{answer}</div>
-                  </div>
+                  </div>,
                 )}
               </>
             )}
