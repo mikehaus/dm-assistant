@@ -3,6 +3,7 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { AxiosError } from "axios";
 
 import { getOpenAiCompletion } from "./api/openAi";
 
@@ -23,6 +24,26 @@ const PyramidLoader = () => {
   );
 };
 
+type CompletionChoice = {
+  finish_reason: string,
+  index: number,
+  logprobs: number | null,
+  text: string
+}
+
+type CompletionResponse = {
+  choices: CompletionChoice[],
+  created: number,
+  id: string,
+  model: string,
+  object: string
+  usage: {
+    prompt_tokens: number,
+    completion_tokens: number,
+    total_tokens: number,
+  }
+}
+
 const Home: NextPage = () => {
   const user = useUser();
 
@@ -30,7 +51,7 @@ const Home: NextPage = () => {
   const [questInputValue, setQuestInputValue] = useState("");
 
   // TODO: Add debounced input value to prevent requery
-  const { isLoading, data, error } = useQuery(
+  const { isLoading, data , error } = useQuery<CompletionResponse, AxiosError>(
     ["completion"],
     () => getOpenAiCompletion(
       DEFAULT_COMPLETIONS_PROMPT,
@@ -39,8 +60,13 @@ const Home: NextPage = () => {
   );
 
   // TODO: Find way to handle data to prevent error on div
+  // TODO: This is really janky. Find way to redo type
   const generateAdventure = () => {
-    console.log(data);
+    const choices = data?.choices;
+
+    console.log(choices);
+    const choice = choices ? choices[0] : { text: "" }; 
+    setAnswer(choice?.text || "");
   };
 
   if (!user.isLoaded) {
@@ -103,20 +129,20 @@ const Home: NextPage = () => {
                 </div>
                 <input
                   type="text"
-                  className="flex justify-center w-1/2 h-14 text-sky-200 bg-sky-900 p-3 my-4 rounded-full"
+                  className="flex justify-center w-1/2 h-12 text-sky-300 bg-slate-900 shadow p-3 my-4 px-4 rounded-full"
                   placeholder="test"
                   value={questInputValue}
                   onChange={(e) => setQuestInputValue(e.target.value)}
                 />
                 {!!isLoading && <LoadingSplash />}
                 {!!error && <ErrorSplash />}
-                {!!answer.length && !isLoading && !error(
-                  <div className="answer-card my-4 h-fit w-1/2 rounded-xl p-4">
-                    <h3 className="text-lg text-sky-300 font-bold">
+                {!!answer?.length && !isLoading && (
+                  <div className="my-4 h-fit w-1/2 rounded-xl p-4 bg-gray-700">
+                    <h3 className="text-lg text-slate-100 font-bold">
                       Your generated adventure:
                     </h3>
-                    <div className="text-sm text-sky-400 mt-2">{answer}</div>
-                  </div>,
+                    <div className="text-sm text-slate-300 mt-2">{answer}</div>
+                  </div>
                 )}
               </>
             )}
