@@ -48,7 +48,6 @@ const Home: NextPage = () => {
   const user = useUser();
 
   const [answer, setAnswer] = useState("");
-  const [questInputValue, setQuestInputValue] = useState("");
 
   // TODO: Add debounced input value to prevent requery
   const { isLoading, data , error } = useQuery<CompletionResponse, AxiosError>(
@@ -64,7 +63,6 @@ const Home: NextPage = () => {
   const generateAdventure = () => {
     const choices = data?.choices;
 
-    console.log(choices);
     const choice = choices ? choices[0] : { text: "" }; 
     setAnswer(choice?.text || "");
   };
@@ -127,13 +125,6 @@ const Home: NextPage = () => {
                     </div>
                   </div>
                 </div>
-                <input
-                  type="text"
-                  className="flex justify-center w-1/2 h-12 text-sky-300 bg-slate-900 shadow p-3 my-4 px-4 rounded-full"
-                  placeholder="test"
-                  value={questInputValue}
-                  onChange={(e) => setQuestInputValue(e.target.value)}
-                />
                 {!!isLoading && <LoadingSplash />}
                 {!!error && <ErrorSplash />}
                 {!!answer?.length && !isLoading && (
