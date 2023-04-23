@@ -14,16 +14,16 @@ const client = s3.createClient({
   },
 });
 
-const S3_PARAMS = {
-  localFile: file,
-  s3Params: {
-    Bucket: process.env.S3_BUCKET_NAME,
-    // KEY: 'some/remote/file',
-    // TODO: MAY NEED OTHER OPTIONS STATED HERE: See: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property
-  },
-};
-
 export const uploadImageToS3 = (file) => {
+  const S3_PARAMS = {
+    localFile: file,
+    s3Params: {
+      Bucket: process.env.S3_BUCKET_NAME,
+      // KEY: 'some/remote/file',
+      // TODO: MAY NEED OTHER OPTIONS STATED HERE: See: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property
+    },
+  };
+
   const uploader = client.uploadFile(S3_PARAMS);
 
   uploader.on("error", (err) => console.err("unable to upload: ", err.stack));
@@ -39,7 +39,16 @@ export const uploadImageToS3 = (file) => {
   uploader.on("end", () => console.log("Finished Uploading file!"));
 };
 
-export const downloadFileFromS3 = () => {
+export const downloadFileFromS3 = (file) => {
+  const S3_PARAMS = {
+    localFile: file,
+    s3Params: {
+      Bucket: process.env.S3_BUCKET_NAME,
+      // KEY: 'some/remote/file',
+      // TODO: MAY NEED OTHER OPTIONS STATED HERE: See: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property
+    },
+  };
+
   const downloader = client.downloadFile(S3_PARAMS);
 
   downloader.on("error", (err) =>
