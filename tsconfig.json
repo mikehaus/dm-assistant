@@ -19,7 +19,8 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./src/*"]
-    }
+    },
+    "noImplicitAny": false,
   },
   "include": [
     ".eslintrc.cjs",
@@ -27,7 +28,7 @@
     "**/*.ts",
     "**/*.tsx",
     "**/*.cjs",
-    "**/*.mjs"
-  ],
+    "**/*.mjs",
+],
   "exclude": ["node_modules"]
 }
