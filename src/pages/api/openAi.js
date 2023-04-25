@@ -1,9 +1,12 @@
 // import { Configuration, OpenAIApi } from "openai";
 import axios from "axios";
 import { Configuration, OpenAIApi } from "openai";
-import fs from "fs";
+// import fs from "fs";
 import http from "https";
 import { v3 as uuidv4 } from "uuid";
+import { uploadFileToS3 } from "./s3";
+import { instanceOf } from "prop-types";
+import { putS3Object } from "./s3Client";
 
 // TODO: REWORK FILE TO TS ONCE I HAVE MAIN REQUESTS WORKING
 
@@ -51,7 +54,7 @@ export async function getOpenAiCompletion(
 // TODO: Implement sad path for generate image
 // TODO: Extend to handle upload for multiple files
 // TODO: Work on uuid hashing mechanism for security: create uuid hash function, append to file name, decrypt uuid from hash to retrieve and store files in db;
-export async function getGeneratedImages(prompt = DEFAULT_IMAGE_PROMPT) {
+export async function handleGenerateImages(prompt = DEFAULT_IMAGE_PROMPT) {
   const response = await openAi
     .createImage(
       {
@@ -66,24 +69,51 @@ export async function getGeneratedImages(prompt = DEFAULT_IMAGE_PROMPT) {
         },
       }
     )
-    .then((data) => streamImageToS3(data))
+    .then((data) => getBufferFromUrl(data))
     .catch((err) => console.error(err));
+    // .then((data) => downloadImage(data))
+    // .catch((err) => console.error(err));
+
+  return response;
 }
 
-// TODO: add file to database on upload
-const streamImageToS3 = (imageResponseData) => {
-  // imageResponseData: {created: number, data: { { url: string }[] };
-
+// MARK: 2nd version of image gen due to Next.js not handling fs module well
+export async function getBufferFromUrl(imageResponseData) {
   const fileUid = uuidv4();
   const imageUrl = imageResponseData.data[0].url;
   const fileName = `img-${fileUid}.png`;
 
-  const imageFile = fs.createWriteStream(fileName);
-  const request = http.get(imageUrl, (response) => {
-    response.pipe(imageFile);
-    imageFile.on("finish", () => {
-      imageFile.close();
-      alert("Image file downloaded!");
-    });
+  // get openAi url and store in ArrayBuffer (generic raw binary data buffer)
+  const axiosResponse = await axios({
+    url: imageUrl,
+    method: "GET",
+    responseType: "arraybuffer",
   });
-};
+
+  const data = axiosResponse?.data;
+  // TODO: Handle validation that data is actually an instanceof buffer
+  if (!data) console.error("Error processing OpenAi Image url. Response should be of type buffer");
+
+  await putS3Object(data, `dnd/${fileUid}`);
+  // TODO: Send buffer to s3 client
+  return data;
+}
+
+// TODO: add file to database on upload
+// const downloadImage = (imageResponseData) => {
+//   // imageResponseData: {created: number, data: { { url: string }[] };
+//
+//   const fileUid = uuidv4();
+//   const imageUrl = imageResponseData.data[0].url;
+//   const fileName = `img-${fileUid}.png`;
+//
+//   const imageFile = fs.createWriteStream(fileName);
+//   const request = http.get(imageUrl, (response) => {
+//     response.pipe(imageFile);
+//     imageFile.on("finish", () => {
+//       uploadFileToS3(imageFile);
+//       imageFile.close();
+//       alert("Image file downloaded!");
+//     });
+//   });
+// };

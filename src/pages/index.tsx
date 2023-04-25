@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { AxiosError } from "axios";
 
-import { getOpenAiCompletion } from "./api/openAi";
+import { getOpenAiCompletion, handleGenerateImages } from "./api/openAi";
 
 const DEFAULT_COMPLETIONS_MODEL = "text-davinci-003";
 const DEFAULT_COMPLETIONS_PROMPT =
@@ -25,24 +25,24 @@ const PyramidLoader = () => {
 };
 
 type CompletionChoice = {
-  finish_reason: string,
-  index: number,
-  logprobs: number | null,
-  text: string
-}
+  finish_reason: string;
+  index: number;
+  logprobs: number | null;
+  text: string;
+};
 
 type CompletionResponse = {
-  choices: CompletionChoice[],
-  created: number,
-  id: string,
-  model: string,
-  object: string
+  choices: CompletionChoice[];
+  created: number;
+  id: string;
+  model: string;
+  object: string;
   usage: {
-    prompt_tokens: number,
-    completion_tokens: number,
-    total_tokens: number,
-  }
-}
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+};
 
 const Home: NextPage = () => {
   const user = useUser();
@@ -50,12 +50,13 @@ const Home: NextPage = () => {
   const [answer, setAnswer] = useState("");
 
   // TODO: Add debounced input value to prevent requery
-  const { isLoading, data , error } = useQuery<CompletionResponse, AxiosError>(
+  const { isLoading, data, error } = useQuery<CompletionResponse, AxiosError>(
     ["completion"],
-    () => getOpenAiCompletion(
-      DEFAULT_COMPLETIONS_PROMPT,
-      DEFAULT_COMPLETIONS_MODEL,
-    ),
+    () =>
+      getOpenAiCompletion(
+        DEFAULT_COMPLETIONS_PROMPT,
+        DEFAULT_COMPLETIONS_MODEL,
+      ),
   );
 
   // TODO: Find way to handle data to prevent error on div
@@ -63,8 +64,17 @@ const Home: NextPage = () => {
   const generateAdventure = () => {
     const choices = data?.choices;
 
-    const choice = choices ? choices[0] : { text: "" }; 
+    const choice = choices ? choices[0] : { text: "" };
     setAnswer(choice?.text || "");
+  };
+
+  // TODO: Find better way to handle async function.
+  // can do useEffect but don't want it to retrigger and really don't want it to be stuck using empty deps array
+  const generateImage = () => {
+    console.log("generating image");
+    // const generatedImageResponse = await handleGenerateImages("A dungeons and dragons human fighter in a renaissance painting style")
+    // console.log(generatedImageResponse)
+    // return;
   };
 
   if (!user.isLoaded) {
@@ -124,15 +134,22 @@ const Home: NextPage = () => {
                       Generate an adventure or quest.
                     </div>
                   </div>
+                  <div
+                    className="flex max-w-xs cursor-pointer flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
+                    onClick={generateImage}
+                    >
+                    <h3 className="text-2xl font-bold">Image Generator</h3>
+                    <div className="text-lg">Generate an image.</div>
+                  </div>
                 </div>
                 {!!isLoading && <LoadingSplash />}
                 {!!error && <ErrorSplash />}
                 {!!answer?.length && !isLoading && (
-                  <div className="my-4 h-fit w-1/2 rounded-xl p-4 bg-gray-700">
-                    <h3 className="text-lg text-slate-100 font-bold">
+                  <div className="my-4 h-fit w-1/2 rounded-xl bg-gray-700 p-4">
+                    <h3 className="text-lg font-bold text-slate-100">
                       Your generated adventure:
                     </h3>
-                    <div className="text-sm text-slate-300 mt-2">{answer}</div>
+                    <div className="mt-2 text-sm text-slate-300">{answer}</div>
                   </div>
                 )}
               </>
