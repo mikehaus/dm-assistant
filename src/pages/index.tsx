@@ -138,8 +138,8 @@ const Home: NextPage = () => {
                     className="flex max-w-xs cursor-pointer flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
                     onClick={generateImage}
                     >
-                    <h3 className="text-2xl font-bold">Image Generator</h3>
-                    <div className="text-lg">Generate an image.</div>
+                    <h3 className="text-2xl font-bold">Trading Card Generator</h3>
+                    <div className="text-lg">Generate a trading card for a DND item.</div>
                   </div>
                 </div>
                 {!!isLoading && <LoadingSplash />}
