@@ -70,10 +70,10 @@ const Home: NextPage = () => {
 
   // TODO: Find better way to handle async function.
   // can do useEffect but don't want it to retrigger and really don't want it to be stuck using empty deps array
-  const generateImage = () => {
+  const generateImage = async () => {
     console.log("generating image");
-    // const generatedImageResponse = await handleGenerateImages("A dungeons and dragons human fighter in a renaissance painting style")
-    // console.log(generatedImageResponse)
+    const generatedImageResponse = await handleGenerateImages("A dungeons and dragons human fighter in a renaissance painting style")
+    console.log(generatedImageResponse)
     // return;
   };
 

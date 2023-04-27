@@ -2,10 +2,10 @@
 import axios from "axios";
 import { Configuration, OpenAIApi } from "openai";
 // import fs from "fs";
-import http from "https";
-import { v3 as uuidv4 } from "uuid";
-import { uploadFileToS3 } from "./s3";
-import { instanceOf } from "prop-types";
+// import http from "https";
+import { v4 as uuidv4 } from "uuid";
+// import { uploadFileToS3 } from "./s3";
+// import { instanceOf } from "prop-types";
 import { putS3Object } from "./s3Client";
 
 // TODO: REWORK FILE TO TS ONCE I HAVE MAIN REQUESTS WORKING
@@ -27,7 +27,7 @@ const openAi = new OpenAIApi(configuration);
 // TODO: Rework with node pkg
 export async function getOpenAiCompletion(
   prompt = DEFAULT_COMPLETION_PROMPT,
-  model = DEFAULT_COMPLETION_MODEL
+  model = DEFAULT_COMPLETION_MODEL,
 ) {
   const response = axios
     .post(
@@ -43,7 +43,7 @@ export async function getOpenAiCompletion(
           "Content-Type": "application/json",
           Authorization: `Bearer ${process.env.OPEN_AI_SECRET_KEY}`,
         },
-      }
+      },
     )
     .then((response) => response.data)
     .catch((error) => error);
@@ -54,6 +54,7 @@ export async function getOpenAiCompletion(
 // TODO: Implement sad path for generate image
 // TODO: Extend to handle upload for multiple files
 // TODO: Work on uuid hashing mechanism for security: create uuid hash function, append to file name, decrypt uuid from hash to retrieve and store files in db;
+// TODO: look at using a pre-trained model
 export async function handleGenerateImages(prompt = DEFAULT_IMAGE_PROMPT) {
   const response = await openAi
     .createImage(
@@ -67,12 +68,12 @@ export async function handleGenerateImages(prompt = DEFAULT_IMAGE_PROMPT) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${process.env.OPEN_AI_SECRET_KEY}`,
         },
-      }
+      },
     )
     .then((data) => getBufferFromUrl(data))
     .catch((err) => console.error(err));
-    // .then((data) => downloadImage(data))
-    // .catch((err) => console.error(err));
+  // .then((data) => downloadImage(data))
+  // .catch((err) => console.error(err));
 
   return response;
 }
@@ -80,7 +81,8 @@ export async function handleGenerateImages(prompt = DEFAULT_IMAGE_PROMPT) {
 // MARK: 2nd version of image gen due to Next.js not handling fs module well
 export async function getBufferFromUrl(imageResponseData) {
   const fileUid = uuidv4();
-  const imageUrl = imageResponseData.data[0].url;
+  // This imageUrl is valid to use
+  const imageUrl = imageResponseData.data.data[0].url;
   const fileName = `img-${fileUid}.png`;
 
   // get openAi url and store in ArrayBuffer (generic raw binary data buffer)
@@ -92,7 +94,11 @@ export async function getBufferFromUrl(imageResponseData) {
 
   const data = axiosResponse?.data;
   // TODO: Handle validation that data is actually an instanceof buffer
-  if (!data) console.error("Error processing OpenAi Image url. Response should be of type buffer");
+  if (!data) {
+    console.error(
+      "Error processing OpenAi Image url. Response should be of type buffer",
+    );
+  }
 
   await putS3Object(data, `dnd/${fileUid}`);
   // TODO: Send buffer to s3 client
