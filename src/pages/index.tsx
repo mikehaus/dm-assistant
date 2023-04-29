@@ -1,15 +1,15 @@
-import { SignIn, SignInButton, UserButton, useUser } from "@clerk/nextjs";
-import { type NextPage } from "next";
-import Head from "next/head";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { AxiosError } from "axios";
+import { SignIn, SignInButton, UserButton, useUser } from '@clerk/nextjs';
+import { type NextPage } from 'next';
+import Head from 'next/head';
+import { useQuery } from '@tanstack/react-query';
+import { ChangeEvent, useState } from 'react';
+import { AxiosError } from 'axios';
 
-import { getOpenAiCompletion, handleGenerateImages } from "./api/openAi";
+import { getOpenAiCompletion, handleGenerateImages } from './api/openAi';
 
-const DEFAULT_COMPLETIONS_MODEL = "text-davinci-003";
+const DEFAULT_COMPLETIONS_MODEL = 'text-davinci-003';
 const DEFAULT_COMPLETIONS_PROMPT =
-  "Provide and idea for a Dungeons and Dragons quest";
+  'Provide and idea for a Dungeons and Dragons quest';
 
 const PyramidLoader = () => {
   return (
@@ -44,19 +44,41 @@ type CompletionResponse = {
   };
 };
 
+type CardDataUpdateType = 'TITLE' | 'DESCRIPTION' | 'PROMPT';
+
+type CardFormData = {
+  prompt: string;
+  title: string;
+  description: string;
+};
+
+type CardData = {
+  imageUrl: string;
+  title: string;
+  description: string;
+};
+
 const Home: NextPage = () => {
   const user = useUser();
 
-  const [answer, setAnswer] = useState("");
+  const [answer, setAnswer] = useState('');
+  const [cardFormVisible, setCardFormVisible] = useState(false);
+  const [cardFormData, setCardFormData] = useState<CardFormData>({
+    prompt: '',
+    title: '',
+    description: '',
+  });
+  const [cardData, setCardData] = useState<CardData>({
+    imageUrl: '',
+    title: '',
+    description: '',
+  });
 
   // TODO: Add debounced input value to prevent requery
   const { isLoading, data, error } = useQuery<CompletionResponse, AxiosError>(
-    ["completion"],
+    ['completion'],
     () =>
-      getOpenAiCompletion(
-        DEFAULT_COMPLETIONS_PROMPT,
-        DEFAULT_COMPLETIONS_MODEL,
-      ),
+      getOpenAiCompletion(DEFAULT_COMPLETIONS_PROMPT, DEFAULT_COMPLETIONS_MODEL)
   );
 
   // TODO: Find way to handle data to prevent error on div
@@ -64,16 +86,58 @@ const Home: NextPage = () => {
   const generateAdventure = () => {
     const choices = data?.choices;
 
-    const choice = choices ? choices[0] : { text: "" };
-    setAnswer(choice?.text || "");
+    const choice = choices ? choices[0] : { text: '' };
+    setAnswer(choice?.text || '');
+  };
+
+  const updateCardData = (
+    e: ChangeEvent<HTMLInputElement>,
+    inputOption: CardDataUpdateType
+  ) => {
+    if (inputOption === 'PROMPT') {
+      setCardFormData({
+        prompt: e.target.value,
+        title: cardFormData.title,
+        description: cardFormData.description,
+      });
+    }
+    if (inputOption === 'TITLE')
+      setCardFormData({
+        prompt: cardFormData.prompt,
+        title: e.target.value,
+        description: cardFormData.description,
+      });
+    if (inputOption === 'DESCRIPTION')
+      setCardFormData({
+        prompt: cardFormData.prompt,
+        description: e.target.value,
+        title: cardFormData.title,
+      });
+  };
+
+  // TODO: Load while image is creating
+  const generateCard = async () => {
+    const generatedImage = await handleGenerateImages(cardFormData.prompt).then(
+      (imageData: { url: string }) => {
+        const { url } = imageData;
+        setCardData({
+          imageUrl: url,
+          title: cardFormData.title,
+          description: cardFormData.description,
+        });
+      }
+    );
+    setCardFormData({ prompt: '', title: '', description: '' });
   };
 
   // TODO: Find better way to handle async function.
   // can do useEffect but don't want it to retrigger and really don't want it to be stuck using empty deps array
   const generateImage = async () => {
-    console.log("generating image");
-    const generatedImageResponse = await handleGenerateImages("A dungeons and dragons human fighter in a renaissance painting style")
-    console.log(generatedImageResponse)
+    console.log('generating image');
+    const generatedImageResponse = await handleGenerateImages(
+      'A dungeons and dragons human fighter in a renaissance painting style'
+    );
+    console.log(generatedImageResponse);
     // return;
   };
 
@@ -136,10 +200,14 @@ const Home: NextPage = () => {
                   </div>
                   <div
                     className="flex max-w-xs cursor-pointer flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-                    onClick={generateImage}
-                    >
-                    <h3 className="text-2xl font-bold">Trading Card Generator</h3>
-                    <div className="text-lg">Generate a trading card for a DND item.</div>
+                    onClick={() => setCardFormVisible(true)}
+                  >
+                    <h3 className="text-2xl font-bold">
+                      Trading Card Generator
+                    </h3>
+                    <div className="text-lg">
+                      Generate a trading card for a DND item.
+                    </div>
                   </div>
                 </div>
                 {!!isLoading && <LoadingSplash />}
@@ -151,6 +219,44 @@ const Home: NextPage = () => {
                     </h3>
                     <div className="mt-2 text-sm text-slate-300">{answer}</div>
                   </div>
+                )}
+                {cardFormVisible && (
+                  <>
+                    <div className="m-4 flex w-full items-center p-4">
+                      <label>Prompt</label>
+                      <input
+                        className="mx-4 h-8 w-96 rounded-lg bg-sky-900 px-2 shadow-sm"
+                        value={cardFormData.prompt}
+                        placeholder="What do you want your image to look like?"
+                        onChange={(e) => updateCardData(e, 'PROMPT')}
+                      />
+                    </div>
+                    <div className="m-4 flex w-full items-center p-4">
+                      <label>Title</label>
+                      <input
+                        className="mx-4 h-8 w-96 rounded-lg bg-sky-900 px-2 shadow-sm"
+                        value={cardFormData.title}
+                        placeholder="Set your card title here"
+                        onChange={(e) => updateCardData(e, 'TITLE')}
+                      />
+                    </div>
+
+                    <div>
+                      <label>Description</label>
+                      <input
+                        className="mx-4 h-8 w-96 rounded-lg bg-sky-900 px-2 shadow-sm"
+                        value={cardFormData.description}
+                        placeholder="Set your description here"
+                        onChange={(e) => updateCardData(e, 'DESCRIPTION')}
+                      />
+                    </div>
+                    <button
+                      className="my-4 h-10 w-20 rounded-xl bg-sky-700 hover:bg-sky-600"
+                      onClick={generateCard}
+                    >
+                      Submit
+                    </button>
+                  </>
                 )}
               </>
             )}
