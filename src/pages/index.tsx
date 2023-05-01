@@ -1,5 +1,6 @@
 import { SignIn, SignInButton, UserButton, useUser } from '@clerk/nextjs';
 import { type NextPage } from 'next';
+import Image from 'next/image';
 import Head from 'next/head';
 import { useQuery } from '@tanstack/react-query';
 import { ChangeEvent, useState } from 'react';
@@ -73,6 +74,7 @@ const Home: NextPage = () => {
     title: '',
     description: '',
   });
+  const [cardIsVisible, setCardIsVisible] = useState<boolean>(false);
 
   // TODO: Add debounced input value to prevent requery
   const { isLoading, data, error } = useQuery<CompletionResponse, AxiosError>(
@@ -116,6 +118,7 @@ const Home: NextPage = () => {
   };
 
   // TODO: Load while image is creating
+  // TODO: Put toast if image isn't loaded or error with function
   const generateCard = async () => {
     const generatedImage = await handleGenerateImages(cardFormData.prompt).then(
       (imageData: { url: string }) => {
@@ -125,9 +128,14 @@ const Home: NextPage = () => {
           title: cardFormData.title,
           description: cardFormData.description,
         });
+        if (url) {
+          setCardIsVisible(true);
+          setCardFormVisible(false);
+        }
+        return;
       }
     );
-    setCardFormData({ prompt: '', title: '', description: '' });
+    setCardFormVisible(false);
   };
 
   // TODO: Find better way to handle async function.
@@ -257,6 +265,14 @@ const Home: NextPage = () => {
                       Submit
                     </button>
                   </>
+                )}
+                {cardIsVisible && (
+                  <div className="h-96 w-56 rounded-lg m-10 bg-gray-700 flex-col grow items-center ">
+                    <Image src={`${cardData.imageUrl}`}
+                      width={150} height={150} className="m-4 roundex-xl" alt="Dnd item"/>
+                    <h2 className="mx-4">{cardData.title}</h2>
+                    <p className="m-4">{cardData.description}</p>
+                  </div>
                 )}
               </>
             )}

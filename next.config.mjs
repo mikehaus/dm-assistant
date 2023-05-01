@@ -21,6 +21,11 @@ const config = {
   env: {
     OPEN_AI_SECRET_KEY: process.env.OPEN_AI_SECRET_KEY || "",
   },
+  images: {
+    domains: [
+      "oaidalleapiprodscus.blob.core.windows.net",
+    ],
+  },
 };
 
 export default config;
